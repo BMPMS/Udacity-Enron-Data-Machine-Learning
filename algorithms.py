@@ -1,58 +1,48 @@
-#Five different algorithms.
+from sklearn.pipeline import Pipeline
+#Five different algorithms all using piplines
 
-def gaussNB(features_train,features_test,labels_train,labels_test):
+def gaussNB(scaler,skb):
 
     from sklearn.naive_bayes import GaussianNB
-    clf = GaussianNB()
-    clf.fit(features_train,labels_train)
-    pred = clf.predict(features_test)
-    #alg_report("GaussianNB",labels_test,pred)
+
+    gnb = GaussianNB()
+    clf = Pipeline(steps=[('Scaler',scaler), ('SKB', skb), ('NaiveBayes', gnb)])
 
     return clf
 
-def alg_report(alg,labels,pred):
 
-    from sklearn.metrics import classification_report
-    target_names = ["Not POI", "POI"]
-    print (alg, " Classification Report:")
-    print (classification_report(y_true=labels, y_pred=pred, target_names=target_names))
-
-def DTree(features_train,features_test,labels_train,labels_test):
+def DTree(scaler,skb):
 
     from sklearn import tree
-    clf = tree.DecisionTreeClassifier(min_samples_split=100)
-    clf.fit(features_train,labels_train)
-    pred = clf.predict(features_test)
-    #alg_report("Decision Tree",labels_test,pred)
+    dt = tree.DecisionTreeClassifier(random_state=42,min_samples_split=5,splitter='random')
+    clf = Pipeline(steps=[('Scaler',scaler), ('SKB', skb), ('Decision Tree', dt)])
 
     return clf
 
-def LogReg(features_train,features_test,labels_train,labels_test):
+
+def LogReg(scaler,skb):
 
     from sklearn.linear_model import LogisticRegression
-    clf = LogisticRegression()
-    clf.fit(features_train,labels_train)
-    pred = clf.predict(features_test)
-    #alg_report("Logistic Regression",labels_test,pred)
+    lg = LogisticRegression(class_weight='balanced')
+    clf = Pipeline(steps=[('Scaler',scaler), ('SKB', skb), ('Logistic Regression', lg)])
 
     return clf
 
-def LinearS(features_train,features_test,labels_train,labels_test):
+
+def LinearS(scaler,skb):
 
     from sklearn.svm import LinearSVC
-    clf = LinearSVC(C=1.0)
-    clf.fit(features_train,labels_train)
-    pred = clf.predict(features_test)
-    #alg_report("Linear SVC",labels_test,pred)
+
+    lsvc = LinearSVC(C=10,class_weight='balanced')
+    clf = Pipeline(steps=[('Scaler',scaler), ('SKB', skb), ('Linear SVC', lsvc)])
+
 
     return clf
 
-def RandForest(features_train,features_test,labels_train,labels_test):
+def RandForest(scaler,skb):
 
     from sklearn.ensemble import RandomForestClassifier
-    clf = RandomForestClassifier(n_estimators=100, min_samples_split=6, max_features=None,oob_score=True)
-    clf.fit(features_train,labels_train)
-    pred = clf.predict(features_test)
-    #alg_report("Random Forest",labels_test,pred)
+    rf = RandomForestClassifier(n_estimators=100,bootstrap=False)
+    clf = Pipeline(steps=[('Scaler',scaler), ('SKB', skb), ('Random Forest', rf)])
 
     return clf

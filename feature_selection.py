@@ -1,27 +1,43 @@
-def kbestperc(features_train,features_test,labels_train,labels_test,features_list):
+from explore_data import poiemails, odd_payments
+
+def test_kbest(features,labels,features_list):
 
     from sklearn.feature_selection import SelectKBest
-    from sklearn.feature_selection import SelectPercentile
 
-    kbest = SelectKBest(k=4)
-    train_new = kbest.fit_transform(features_train,labels_train)
-    kbest2 = SelectKBest(k=4)
-    test_new = kbest2.fit_transform(features_test,labels_test)
-    x = 0
-
-    perc = SelectPercentile(percentile=60)
-    train_perc = perc.fit_transform(features_train,labels_train)
-    perc2 = SelectPercentile(percentile=60)
-    test_perc = perc2.fit_transform(features_test,labels_test)
+    kbest = SelectKBest()
+    kbestrans = kbest.fit_transform(features,labels)
 
     for f in features_list:
         if x > 0:
-            print(f,'train?',kbest.scores_[x-1],'test?',kbest2.scores_[x-1])
-            print(f,'train%',perc.scores_[x-1],'test%',perc2.scores_[x-1])
-
+            print(f,'KBEST',kbest.scores_[x-1])
         x = x + 1
 
-    print('training keep:',kbest.get_support())
-    print('test scores:',kbest2.get_support())
-    print('training keep:',perc.get_support())
-    print('test scores:',perc2.get_support())
+    return kbest
+
+def new_features(data_dict):
+
+    for items in data_dict:
+        data_dict[items]['key_payments'] = data_dict[items]['salary'] + data_dict[items]['bonus'] + data_dict[items]['other']
+        data_dict[items]['deferral_balance'] = data_dict[items]['deferral_payments'] + data_dict[items]['deferred_income']
+        data_dict[items]['retention_incentives'] = data_dict[items]['long_term_incentive'] + data_dict[items]['total_stock_value']
+        data_dict[items]['total_of_totals'] = data_dict[items]['total_payments'] + data_dict[items]['total_stock_value']
+        data_dict[items]['poi_emails'] = poiemails(data_dict[items])
+        data_dict[items]['odd_payments'] = odd_payments(data_dict[items],data_dict[items]['poi'],items)
+        if data_dict[items]['salary'] != 0:
+            data_dict[items]['bonus/salary'] = data_dict[items]['bonus']/data_dict[items]['salary']
+            data_dict[items]['exercised_stock_options/salary'] = data_dict[items]['exercised_stock_options']/data_dict[items]['salary']
+        else:
+            data_dict[items]['bonus/salary'] = 0
+            data_dict[items]['exercised_stock_options/salary'] = 0
+        if data_dict[items]['key_payments'] != 0:
+            data_dict[items]['retention_incentives/key_payments'] = data_dict[items]['retention_incentives']/data_dict[items]['key_payments']
+        else:
+            data_dict[items]['retention_incentives/key_payments'] = 0
+        messagetotal = data_dict[items]['from_messages'] + data_dict[items]['to_messages']
+        if messagetotal > 0:
+            poitotal = data_dict[items]['from_this_person_to_poi'] + data_dict[items]['from_poi_to_this_person']
+            data_dict[items]['poi_emailratio'] = poitotal/messagetotal
+        else:
+            data_dict[items]['poi_emailratio'] = 0
+
+    return data_dict

@@ -6,16 +6,18 @@ sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data, test_classifier
-from explore_data import printresults,printhighnonPOIs,checktotals,graphstats,drawgraphs,finlistall,emaillist,poiemails,update_data_errors,updatenulls
-from feature_selection import kbestperc
+from explore_data import drawboxes,printresults,printhighnonPOIs,checktotals,graphstats,newfeaturelist,finlistall,emaillist,update_data_errors,updatenulls
+from feature_selection import new_features,test_kbest
 from algorithms import gaussNB,LogReg,RandForest,LinearS, DTree
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 
-feature_list = ['poi','poi_emails','key_payments','deferral_balance',
-'retention_incentives','total_of_totals','loan_advances']
+feature_list = ['poi','bonus/salary','exercised_stock_options/salary','poi_emailratio','exercised_stock_options/salary','odd_payments','key_payments','deferral_balance',
+'retention_incentives','total_of_totals','salary','bonus','other','deferral_payments',
+'deferred_income','loan_advances','long_term_incentive',
+'exercised_stock_options','restricted_stock_deferred','restricted_stock']
 
 ### Load the dictionary containing the dataset
 
@@ -34,56 +36,52 @@ with open("final_project_dataset.pkl", "rb") as data_file:
     checktotals(data_dict)
 
 
-    #check total payments and stock values
-    checktotals(data_dict)
-
     #Task 2: Remove outliers..
     data_dict.pop('TOTAL')
     data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
     update_data_errors(data_dict)
 
-    #gather graphstats and drawgraphs
-    finstats,poi_finstats = graphstats(data_dict,finlistall)
-    emailstats,poi_emailstats = graphstats(data_dict,emaillist)
-    drawgraphs(finstats,poi_finstats,emailstats)
+    ### Task 3: Create new feature(s)
 
-### Task 3: Create new feature(s)
-    for items in data_dict:
-        data_dict[items]['key_payments'] = data_dict[items]['salary'] + data_dict[items]['bonus'] + data_dict[items]['other']
-        data_dict[items]['deferral_balance'] = data_dict[items]['deferral_payments'] + data_dict[items]['deferred_income']
-        data_dict[items]['retention_incentives'] = data_dict[items]['long_term_incentive'] + data_dict[items]['total_stock_value']
-        data_dict[items]['total_of_totals'] = data_dict[items]['total_payments'] + data_dict[items]['total_stock_value']
-        data_dict[items]['poi_emails'] = poiemails(data_dict[items])
+    #look at data graphically
+    finstats,poi_finstats = graphstats(data_dict,finlistall)
+    drawboxes(finstats,poi_finstats)
+
+    data_dict = new_features(data_dict)
+    #draw graphs for new features.
+    finstats,poi_finstats = graphstats(data_dict,newfeaturelist)
+    drawboxes(finstats,poi_finstats)
+
     ### Store to my_dataset for easy export below.
     my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
-data = featureFormat(my_dataset, feature_list, sort_keys = True)
-labels, features = targetFeatureSplit(data)
+#In the end I decided to use the StratifiedShuffleSplit in the testing function to do this
 
-### fit the classifier using training set, and test on test set
-from sklearn import cross_validation
-features_train, features_test, labels_train, labels_test = cross_validation.train_test_split(features, labels, test_size=0.3, random_state=42)
 
-#Kbest and Percentile attempted but no consistent results so chose features manually
-#kbestperc(features_train, features_test, labels_train, labels_test,features_list)
+### optimise my features with KBest
+#initial test of kbest (see document)
+#test_kbest(features, labels,feature_list)
 
-#scaler
+### Task 4: Try a varity of classifiers (5 algorithms - see algorithms.py)
+
+from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler()
-features_train = scaler.fit_transform(features_train)
-features_test = scaler.fit_transform(features_test)
+
+scaler =MinMaxScaler()
+skb = SelectKBest(k=6)
 
 
-### Task 4: Try a varity of classifiers (5 algorithms)
+#uncomment the function calls below to test on each algorithm
 
-#clf = LinearS(features_train,features_test,labels_train,labels_test)
-#clf = gaussNB(features_train,features_test,labels_train,labels_test)
-#clf = LogReg(features_train,features_test,labels_train,labels_test)
-#clf = DTree(features_train,features_test,labels_train,labels_test)
-#CHOSEN ALGORITHM - Random Forest classifier
-clf = RandForest(features_train,features_test,labels_train,labels_test)
+#clf = gaussNB(scaler,skb)
+clf = DTree(scaler,skb)
+#clf = LogReg(scaler,skb)
+#clf = LinearS(scaler,skb)
+#clf = RandForest(scaler,skb)
 
+
+#Task 5: Validation and Testing - using StratifiedShuffleSplit and report in tester.py
 test_classifier(clf,my_dataset,feature_list)
 
 ### Task 6: Dump your classifier, dataset, and features_list

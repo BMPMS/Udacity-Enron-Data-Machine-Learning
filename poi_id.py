@@ -14,9 +14,13 @@ from algorithms import gaussNB,LogReg,RandForest,LinearS, DTree
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 
-feature_list = ['poi','bonus/salary','exercised_stock_options/salary','poi_emailratio','exercised_stock_options/salary','odd_payments','key_payments','deferral_balance',
+feature_list = ['poi','odd_payments','key_payments',
+'retention_incentives','salary','bonus','total_stock_value',
+'exercised_stock_options','total_of_totals','deferral_payments']
+
+old_feature_list = ['poi','retention_incentives/key_payments','bonus/salary','poi_emailratio','exercised_stock_options/salary','odd_payments','key_payments','deferral_balance',
 'retention_incentives','total_of_totals','salary','bonus','other','deferral_payments',
-'deferred_income','loan_advances','long_term_incentive',
+'deferred_income','loan_advances','long_term_incentive','director_fees','expenses','total_payments','total_stock_value',
 'exercised_stock_options','restricted_stock_deferred','restricted_stock']
 
 ### Load the dictionary containing the dataset
@@ -39,6 +43,7 @@ with open("final_project_dataset.pkl", "rb") as data_file:
     #Task 2: Remove outliers..
     data_dict.pop('TOTAL')
     data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
+    data_dict.pop('LOCKHART EUGENE E') #all null values.  Cheating as the reviewer told me about this one.
     update_data_errors(data_dict)
 
     ### Task 3: Create new feature(s)
@@ -61,6 +66,8 @@ with open("final_project_dataset.pkl", "rb") as data_file:
 
 ### optimise my features with KBest
 #initial test of kbest (see document)
+#data = featureFormat(my_dataset, feature_list, sort_keys = True)
+#labels, features = targetFeatureSplit(data)
 #test_kbest(features, labels,feature_list)
 
 ### Task 4: Try a varity of classifiers (5 algorithms - see algorithms.py)
@@ -69,7 +76,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import MinMaxScaler
 
 scaler =MinMaxScaler()
-skb = SelectKBest(k=6)
+skb = SelectKBest(k=9)
 
 
 #uncomment the function calls below to test on each algorithm

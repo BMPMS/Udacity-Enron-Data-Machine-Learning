@@ -4,6 +4,8 @@ def test_kbest(features,labels,features_list):
 
     from sklearn.feature_selection import SelectKBest
 
+    x = 0
+    
     kbest = SelectKBest()
     kbestrans = kbest.fit_transform(features,labels)
 

@@ -10,9 +10,8 @@ from explore_data import drawboxes,printresults,printhighnonPOIs,checktotals,gra
 from feature_selection import new_features,test_kbest
 from algorithms import gaussNB,LogReg,RandForest,LinearS, DTree
 
-### Task 1: Select what features you'll use.
-### features_list is a list of strings, each of which is a feature name.
-### The first feature must be "poi".
+### feature_list and old_feature_list are lists of strings, each of which is a feature name.
+### The first feature must always be "poi".
 
 feature_list = ['poi','odd_payments','key_payments',
 'retention_incentives','salary','bonus','total_stock_value',
@@ -29,10 +28,11 @@ old_feature_list = ['poi','retention_incentives/key_payments','bonus/salary','po
 with open("final_project_dataset.pkl", "rb") as data_file:
     data_dict = pickle.load(data_file)
 
-    #Task 1: Explore data (functions in explore_data.py)
+    #Task 1 and 2a: Initial exploration and Null value and Outlier analysis (functions in explore_data.py)
 
     printresults(data_dict)
     updatenulls(data_dict)
+    
     #can run printresults() again to check if this has worked - is does!
 
     #printing out nonPOIs with high values
@@ -40,13 +40,13 @@ with open("final_project_dataset.pkl", "rb") as data_file:
     checktotals(data_dict)
 
 
-    #Task 2: Remove outliers..
+    #Task 2b: Outlier removal (functions in explore_data.py)
     data_dict.pop('TOTAL')
     data_dict.pop('THE TRAVEL AGENCY IN THE PARK')
     data_dict.pop('LOCKHART EUGENE E') #all null values.  Cheating as the reviewer told me about this one.
     update_data_errors(data_dict)
 
-    ### Task 3: Create new feature(s)
+    ### Task 3: New features (functions in explore_data.py)
 
     #look at data graphically
     finstats,poi_finstats = graphstats(data_dict,finlistall)
@@ -60,25 +60,23 @@ with open("final_project_dataset.pkl", "rb") as data_file:
     ### Store to my_dataset for easy export below.
     my_dataset = data_dict
 
-### Extract features and labels from dataset for local testing
-#In the end I decided to use the StratifiedShuffleSplit in the testing function to do this
+### Task 4: Feature Removal and Selection ( functions in feature_selection.py)
 
-
-### optimise my features with KBest
-#initial test of kbest (see document)
+#initial test commented out
 #data = featureFormat(my_dataset, feature_list, sort_keys = True)
 #labels, features = targetFeatureSplit(data)
 #test_kbest(features, labels,feature_list)
 
-### Task 4: Try a varity of classifiers (5 algorithms - see algorithms.py)
+skb = SelectKBest(k=9)
+
+### Task 5: Feature scaling
 
 from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import MinMaxScaler
 
 scaler =MinMaxScaler()
-skb = SelectKBest(k=9)
 
-
+### Task 8 - Algorithm Choice and Parameter Tuning (functions in algorithms.py)
 #uncomment the function calls below to test on each algorithm
 
 #clf = gaussNB(scaler,skb)
@@ -88,7 +86,7 @@ clf = DTree(scaler,skb)
 #clf = RandForest(scaler,skb)
 
 
-#Task 5: Validation and Testing - using StratifiedShuffleSplit and report in tester.py
+#Task 7: Cross Validation and Testing - using StratifiedShuffleSplit and report in tester.py (Udacity function)
 test_classifier(clf,my_dataset,feature_list)
 
 ### Task 6: Dump your classifier, dataset, and features_list
